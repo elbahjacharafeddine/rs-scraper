@@ -148,7 +148,7 @@ const authorData = async ({ authorId }) => {
       });
     }
 
-    await page.waitForSelector(".highcharts-root path");
+    // await page.waitForSelector(".highcharts-root path");
 
     let author = await page.evaluate(() => {
       const name = document

@@ -38,7 +38,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36');
-
+        await page.setDefaultNavigationTimeout(60000);
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId='+authorId);
 
 
@@ -48,17 +48,19 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+        const interests = []
+        const citationsPerYear = [];
 
         const author ={
             name,
-            // profilePicture: "",
+            profilePicture: "",
             univer,
             email: "",
             // indexes,
-            // interests,
+            interests,
             // publications,
-            // coauthors: [],
-            // citationsPerYear,
+            coauthors: [],
+            citationsPerYear,
         };
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
