@@ -24,7 +24,7 @@ app.use(Sentry.Handlers.errorHandler());
 app.listen(process.env.PORT || 2000, () =>
   console.log("Server started on port :", process.env.PORT || 2000)
 );
-app.get("/",(req, res) =>{
+app.get("/test",(req, res) =>{
     res.send('server for web web scraping is running ...')
 })
 
