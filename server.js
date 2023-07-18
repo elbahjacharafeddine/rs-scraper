@@ -50,6 +50,23 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
         const interests = []
         const citationsPerYear = [];
+        const publications = [
+            {
+                title: "Publication 1",
+                authors: ["Author 1", "Author 2"],
+                citation: "10",
+                year: "2022",
+                source: "Journal A",
+            },
+            {
+                title: "Publication 2",
+                authors: ["Author 3", "Author 4"],
+                citation: "5",
+                year: "2021",
+                source: "Journal B",
+            },
+        ];
+
 
         const author ={
             name,
@@ -58,7 +75,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             email: "",
             // indexes,
             interests,
-            // publications,
+            publications,
             coauthors: [],
             citationsPerYear,
         };
