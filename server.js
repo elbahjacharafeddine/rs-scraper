@@ -67,13 +67,26 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             },
         ];
 
+        const indexes = [
+            {
+                name: "citations",
+                total: "1000",
+                lastFiveYears: "2010",
+            },
+            {
+                name: "h-index",
+                total: "50",
+                lastFiveYears: "2020",
+            },
+        ];
+
 
         const author ={
             name,
             profilePicture: "",
             univer,
             email: "",
-            // indexes,
+            indexes,
             interests,
             publications,
             coauthors: [],
