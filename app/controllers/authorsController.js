@@ -12,18 +12,18 @@ const authorSearch = async (req, resp) => {
     return;
   }
 
-  const scholarAuthors = await scholarScraper.authorSearch({ authorName });
+  // const scholarAuthors = await scholarScraper.authorSearch({ authorName });
   const scopusAuthors = await scopusScraper.authorSearch({ authorName });
 
-  if (scholarAuthors.error && scopusAuthors.error) {
-    resp.status(200).send({
-      error: { scholar: scholarAuthors.error, scopus: scopusAuthors.error },
-    });
-  }
+  // if (scholarAuthors.error && scopusAuthors.error) {
+  //   resp.status(200).send({
+  //     error: { scholar: scholarAuthors.error, scopus: scopusAuthors.error },
+  //   });
+  // }
 
-  if (scholarAuthors.authors || scopusAuthors.authors) {
+  if ( scopusAuthors.authors) {
     const authors = [
-      ...(scholarAuthors.authors ? scholarAuthors.authors : []),
+      // ...(scholarAuthors.authors ? scholarAuthors.authors : []),
       ...(scopusAuthors.authors ? scopusAuthors.authors : []),
     ];
     resp.send({ authors });
