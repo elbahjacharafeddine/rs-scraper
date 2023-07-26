@@ -53,7 +53,13 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
 
         const interests = []
-        const citationsPerYear = [];
+        const citationsPerYear = [
+            { year: 2018, citations: 20 },
+            { year: 2019, citations: 50 },
+            { year: 2020, citations: 80 },
+            { year: 2021, citations: 100 },
+            { year: 2022, citations: 120 },
+        ];
 
 
         const indexes = [
