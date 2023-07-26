@@ -54,6 +54,9 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         const interests = []
         const citationsPerYear = [
+            { year: 2015, citations: 20 },
+            { year: 2016, citations: 20 },
+            { year: 2017, citations: 20 },
             { year: 2018, citations: 20 },
             { year: 2019, citations: 50 },
             { year: 2020, citations: 80 },
