@@ -53,7 +53,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
 
         const interests = []
-        const citationsPerYear = [10,13,23,14,18];
+        const citationsPerYear = ["Citations",10,13,23,14,18];
 
 
         const indexes = [
