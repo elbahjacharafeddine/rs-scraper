@@ -48,21 +48,12 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
-        const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim())
+        const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',' '))
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
 
         const interests = []
-        const citationsPerYear = [
-            {
-                2016:23,
-                2018:34,
-                2019:20,
-                2020:18,
-                2022:15,
-                2023:22
-            }
-        ];
+        const citationsPerYear = [10,13,23,14,18];
 
 
         const indexes = [
