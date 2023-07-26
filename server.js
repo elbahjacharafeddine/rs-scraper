@@ -37,36 +37,23 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         });
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36');
-        await page.setDefaultNavigationTimeout(60000);
-        await page.goto('https://www.scopus.com/authid/detail.uri?authorId='+authorId);
+        await page.setUserAgent('Chrome/96.0.4664.93');
+        await page.setDefaultNavigationTimeout(70000);
 
+        const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+        await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
+        await navigationPromise; // Wait for the DOM content to be fully loaded
 
         await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
+
+        // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
+
         const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim())
-
-
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+
         const interests = []
         const citationsPerYear = [];
-        const publications = [
-            {
-                title: "Publication 1",
-                authors: ["Author 1", "Author 2"],
-                citation: "10",
-                year: "2022",
-                source: "Journal A",
-            },
-            {
-                title: "Publication 2",
-                authors: ["Author 3", "Author 4"],
-                citation: "5",
-                year: "2021",
-                source: "Journal B",
-            },
-        ];
-
         const indexes = [
             {
                 name: "citations",
@@ -80,6 +67,31 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             },
         ];
 
+        await autoScroll(page);
+
+        console.log("time out started")
+        await page.waitForTimeout(10000);
+        console.log("time out finished")
+
+        const publications = await page.evaluate(() =>
+            Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
+                title:e.querySelector('h4 span').innerText,
+                authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
+                citation : e.querySelector('.col-3 span:nth-child(1)').innerText,
+                year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
+                source:e.querySelector('span.text-bold').innerText,
+            })));
+
+
+
+        // const allSpan = await page.evaluate(() => Array.from(document.querySelectorAll('#documents-panel li h4  span'), (e) => e.textContent));
+        //
+        // // console.log(allSpan);
+        // console.log(allSpan.length);
+        // for (let i =0; i< allSpan.length; i++){
+        //     console.log(allSpan[i])
+        //     console.log(i)
+        // }
 
         const author ={
             name,
@@ -91,6 +103,8 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             publications,
             coauthors: [],
             citationsPerYear,
+            // listItem,
+            // liElement,
         };
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
@@ -104,3 +118,23 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         console.error('Une erreur s\'est produite :', error);
     }
 })
+
+
+async function autoScroll(page){
+    await page.evaluate(async () => {
+        await new Promise((resolve) => {
+            let totalHeight = 0;
+            const distance = 100;
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                if (totalHeight >= scrollHeight - window.innerHeight) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    });
+}

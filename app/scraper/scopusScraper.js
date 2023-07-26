@@ -149,6 +149,7 @@ const authorData = async ({ authorId }) => {
     }
 
     // await page.waitForSelector(".highcharts-root path");
+    await autoScroll(page)
 
     let author = await page.evaluate(() => {
       const name = document
@@ -249,7 +250,27 @@ const authorData = async ({ authorId }) => {
   }
 };
 
+async function autoScroll(page){
+  await page.evaluate(async () => {
+    await new Promise((resolve) => {
+      let totalHeight = 0;
+      const distance = 100;
+      const timer = setInterval(() => {
+        const scrollHeight = document.body.scrollHeight;
+        window.scrollBy(0, distance);
+        totalHeight += distance;
+
+        if (totalHeight >= scrollHeight - window.innerHeight) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 100);
+    });
+  });
+}
+
 module.exports = {
+  autoScroll : performanceWrapping(autoScroll),
   authorSearch: performanceWrapping(authorSearch),
   authorData: performanceWrapping(authorData),
 };
