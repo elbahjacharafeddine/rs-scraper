@@ -38,7 +38,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
-        await page.setDefaultNavigationTimeout(75000);
+        // await page.setDefaultNavigationTimeout(75000);
 
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
@@ -67,7 +67,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 lastFiveYears: "2020",
             },
         ];
-
+        await page.waitForTimeout(2000);
         await autoScroll(page);
 
         console.log("time out started")
@@ -82,6 +82,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
                 source:e.querySelector('span.text-bold').innerText,
             })));
+        await page.waitForTimeout(2000);
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
 
@@ -93,6 +94,8 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
             return { year, citations };
         });
+
+        await page.waitForTimeout(2000);
 
 
         const author ={
@@ -111,8 +114,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
 
-
-        await browser.close();
         // Fermer le navigateur
         await browser.close();
         // return res.send({ univer })
