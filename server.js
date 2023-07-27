@@ -54,19 +54,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         const interests = []
 
-
-        const indexes = [
-            {
-                name: "citations",
-                total: "1000",
-                lastFiveYears: "2010",
-            },
-            {
-                name: "h-index",
-                total: "50",
-                lastFiveYears: "2020",
-            },
-        ];
         // await page.waitForTimeout(1000);
         await autoScroll(page);
 
@@ -94,6 +81,19 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
             return { year, citations };
         });
+        const totalCitations = citationsPerYear.reduce((acc, item) => acc + item.citations, 0);
+        const indexes = [
+            {
+                name: "citations",
+                total: totalCitations,
+                lastFiveYears: "",
+            },
+            {
+                name: "h-index",
+                total: "",
+                lastFiveYears: "",
+            },
+        ];
 
         await page.waitForTimeout(1000);
 
