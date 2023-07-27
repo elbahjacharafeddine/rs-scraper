@@ -67,7 +67,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 lastFiveYears: "2020",
             },
         ];
-        await page.waitForTimeout(2000);
+        // await page.waitForTimeout(1000);
         await autoScroll(page);
 
         console.log("time out started")
@@ -82,7 +82,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
                 source:e.querySelector('span.text-bold').innerText,
             })));
-        await page.waitForTimeout(2000);
+        // await page.waitForTimeout(1000);
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
 
@@ -95,7 +95,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             return { year, citations };
         });
 
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
 
 
         const author ={
