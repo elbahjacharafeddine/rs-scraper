@@ -38,7 +38,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
-        await page.setDefaultNavigationTimeout(65000);
+        await page.setDefaultNavigationTimeout(70000);
 
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
@@ -51,7 +51,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',''))
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
-
+        const h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc",(e) =>e.textContent)
         const interests = []
 
         // await page.waitForTimeout(1000);
@@ -90,12 +90,12 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             },
             {
                 name: "h-index",
-                total: "",
+                total: h_index,
                 lastFiveYears: "",
             },
         ];
 
-        await page.waitForTimeout(1000);
+        // await page.waitForTimeout(1000);
 
 
         const author ={
