@@ -38,7 +38,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
-        await page.setDefaultNavigationTimeout(70000);
+        await page.setDefaultNavigationTimeout(75000);
 
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
@@ -94,16 +94,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             return { year, citations };
         });
 
-
-
-        // const allSpan = await page.evaluate(() => Array.from(document.querySelectorAll('#documents-panel li h4  span'), (e) => e.textContent));
-        //
-        // // console.log(allSpan);
-        // console.log(allSpan.length);
-        // for (let i =0; i< allSpan.length; i++){
-        //     console.log(allSpan[i])
-        //     console.log(i)
-        // }
 
         const author ={
             name,
