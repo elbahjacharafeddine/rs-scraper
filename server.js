@@ -53,16 +53,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
 
         const interests = []
-        const citationsPerYear = [
-            { year: 2015, citations: 20 },
-            { year: 2016, citations: 20 },
-            { year: 2017, citations: 20 },
-            { year: 2018, citations: 20 },
-            { year: 2019, citations: 50 },
-            { year: 2020, citations: 80 },
-            { year: 2021, citations: 100 },
-            { year: 2022, citations: 120 },
-        ];
 
 
         const indexes = [
@@ -92,6 +82,17 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
                 source:e.querySelector('span.text-bold').innerText,
             })));
+
+        const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
+
+
+        const citationsPerYear = allPath.map(item => {
+            const [yearString, citationsString] = item.split(':');
+            const year = parseInt(yearString.trim());
+            const citations = parseInt(citationsString.trim());
+
+            return { year, citations };
+        });
 
 
 
