@@ -39,7 +39,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
         await page.setDefaultNavigationTimeout(70000);
-
+        await page.waitForFunction(() => document.readyState === 'complete');
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
         await navigationPromise; // Wait for the DOM content to be fully loaded
@@ -51,7 +51,12 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',''))
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
         const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
-        const h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc",(e) =>e.textContent)
+        let h_index=''
+        try {
+            h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc",(e) =>e.textContent)
+        }catch (error){
+            console.log("")
+        }
         const interests = []
 
         // await page.waitForTimeout(1000);
