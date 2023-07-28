@@ -117,7 +117,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             // liElement,
         };
 
-        res.send({ "author": { authorId, platform: "scopus", ...author } });
+        await res.send({ "author": { authorId, platform: "scopus", ...author } });
 
         console.log("operation finished")
         // Fermer le navigateur
