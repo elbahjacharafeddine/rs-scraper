@@ -44,7 +44,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
         await navigationPromise; // Wait for the DOM content to be fully loaded
 
-        // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
+        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
@@ -77,7 +77,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         // await page.waitForTimeout(1000);
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-
+        await browser.close();
 
         const citationsPerYear = allPath.map(item => {
             const [yearString, citationsString] = item.split(':');
@@ -100,7 +100,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             },
         ];
 
-        await browser.close();
         // await page.waitForTimeout(1000);
 
 
@@ -117,6 +116,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         };
 
         await res.send({ "author": { authorId, platform: "scopus", ...author } });
+
         console.log("operation finished")
         // Fermer le navigateur
 
