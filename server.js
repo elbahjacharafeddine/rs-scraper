@@ -100,6 +100,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             },
         ];
 
+        await browser.close();
         // await page.waitForTimeout(1000);
 
 
@@ -116,10 +117,9 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         };
 
         await res.send({ "author": { authorId, platform: "scopus", ...author } });
-
         console.log("operation finished")
         // Fermer le navigateur
-        await browser.close();
+
         // return res.send({ univer })
     } catch (error) {
         console.error('Une erreur s\'est produite :', error);
