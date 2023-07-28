@@ -39,7 +39,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
         await page.setDefaultNavigationTimeout(90000);
-        await page.waitForFunction(() => document.readyState === 'complete');
+        // await page.waitForFunction(() => document.readyState === 'complete');
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
         await navigationPromise; // Wait for the DOM content to be fully loaded
