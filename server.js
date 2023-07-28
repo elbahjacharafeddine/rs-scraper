@@ -119,6 +119,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
 
+        console.log("operation finished")
         // Fermer le navigateur
         await browser.close();
         // return res.send({ univer })
