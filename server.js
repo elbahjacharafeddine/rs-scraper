@@ -38,13 +38,13 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
-        await page.setDefaultNavigationTimeout(90000);
+        await page.setDefaultNavigationTimeout(70000);
         // await page.waitForFunction(() => document.readyState === 'complete');
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
         await navigationPromise; // Wait for the DOM content to be fully loaded
 
-        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
+        // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
@@ -113,8 +113,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             publications,
             coauthors: [],
             citationsPerYear,
-            // listItem,
-            // liElement,
         };
 
         await res.send({ "author": { authorId, platform: "scopus", ...author } });
