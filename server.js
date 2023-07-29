@@ -40,7 +40,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await page.setUserAgent('Chrome/96.0.4664.93');
         await page.setDefaultNavigationTimeout(85000);
         // await page.waitForFunction(() => document.readyState === 'complete');
-        const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+        // const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
 
         await page.goto('https://eressources.imist.ma/login');
 
@@ -51,18 +51,18 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             page.waitForNavigation(),
             page.click('button[type="submit"]'), // selector for the login button
         ]);
-        console.log("good")
+        console.log("Authentication with success ... ")
 
 
         await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
-        await navigationPromise; // Wait for the DOM content to be fully loaded
+        // await navigationPromise; // Wait for the DOM content to be fully loaded
 
-        console.log('navigation to scopus')
+        console.log('navigation to scopus...')
         // await browser.close();
         await page.waitForTimeout(1000);
-        console.log('debut de scroll')
+        console.log('debut de scroll...')
         await autoScroll(page);
-        console.log('fin de scroll')
+        console.log('fin de scroll...')
 
         await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:5000});
 
@@ -80,14 +80,20 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const interests = []
 
         // await page.waitForTimeout(1000);
-        console.log("time out started")
-        await page.waitForTimeout(2000);
-        console.log("time out finished")
+        console.log("time out started...")
+        await page.waitForTimeout(1000);
+        console.log("time out finished...")
         await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+        console.log('select item for pagination...')
         await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
-        await page.waitForTimeout(2000);
+        console.log('set value in item...')
+        await page.waitForTimeout(1000);
+
+        console.log('debut de scroll...')
         await autoScroll(page);
-        await page.waitForTimeout(2000);
+        console.log('fin de scroll...')
+
+        await page.waitForTimeout(1000);
         const publications = await page.evaluate(() =>
             Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
                 title:e.querySelector('h4 span').innerText,
@@ -98,7 +104,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             })));
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-        // await browser.close();
+        await browser.close();
 
         const citationsPerYear = allPath.map(item => {
             const [yearString, citationsString] = item.split(':');
