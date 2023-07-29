@@ -32,7 +32,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
     const {authorId} = req.params
     try {
         const browser = await puppeteer.launch({
-            headless: true,
+            headless: false,
             args: ['--no-sandbox', '--disable-setuid-sandbox'] // Ajoutez d'autres arguments au besoin
         });
         const page = await browser.newPage();
@@ -41,10 +41,30 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await page.setDefaultNavigationTimeout(85000);
         // await page.waitForFunction(() => document.readyState === 'complete');
         const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
-        await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
+
+        await page.goto('https://eressources.imist.ma/login');
+
+        await page.type('#email', 'lachgar.m@ucd.ac.ma');
+        await page.type('#password', 'Azerty@@00');
+
+        await Promise.all([
+            page.waitForNavigation(),
+            page.click('button[type="submit"]'), // selector for the login button
+        ]);
+        console.log("good")
+
+
+        await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
         await navigationPromise; // Wait for the DOM content to be fully loaded
 
-        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content');
+        console.log('navigation to scopus')
+        // await browser.close();
+        await page.waitForTimeout(1000);
+        console.log('debut de scroll')
+        await autoScroll(page);
+        console.log('fin de scroll')
+
+        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:5000});
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
@@ -60,12 +80,14 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         const interests = []
 
         // await page.waitForTimeout(1000);
-        await autoScroll(page);
-
         console.log("time out started")
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000);
         console.log("time out finished")
-
+        await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+        await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
+        await page.waitForTimeout(2000);
+        await autoScroll(page);
+        await page.waitForTimeout(2000);
         const publications = await page.evaluate(() =>
             Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
                 title:e.querySelector('h4 span').innerText,
@@ -74,10 +96,9 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
                 year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
                 source:e.querySelector('span.text-bold').innerText,
             })));
-        // await page.waitForTimeout(1000);
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-        await browser.close();
+        // await browser.close();
 
         const citationsPerYear = allPath.map(item => {
             const [yearString, citationsString] = item.split(':');
@@ -117,10 +138,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         await res.send({ "author": { authorId, platform: "scopus", ...author } });
 
-        console.log("operation finished")
-        // Fermer le navigateur
 
-        // return res.send({ univer })
     } catch (error) {
         console.error('Une erreur s\'est produite :', error);
     }
