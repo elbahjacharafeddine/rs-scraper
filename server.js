@@ -34,13 +34,24 @@ let browser;
 
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
-    if (!browser) {
-        browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        });
-    }
-    return browser;
+    browser = await puppeteer.launch({
+        headless: false,
+        userDataDir: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+return browser;
+}
+
+async function goToErressource(page) {
+    await page.goto('https://eressources.imist.ma/login');
+    await page.type('#email', 'lachgar.m@ucd.ac.ma');
+    await page.type('#password', 'Azerty@@00');
+    await Promise.all([
+        page.waitForNavigation(), // Wait for the navigation to complete after clicking the login button.
+        page.click('button[type="submit"]'),
+    ]);
+    console.log("Authentication with success ... ");
 }
 
 app.get('/auth/scopus/:authorId',async (req, res) =>{
@@ -53,17 +64,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await page.setDefaultNavigationTimeout(85000);
         // await page.waitForFunction(() => document.readyState === 'complete');
         // const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
-
-        await page.goto('https://eressources.imist.ma/login');
-
-        await page.type('#email', 'lachgar.m@ucd.ac.ma');
-        await page.type('#password', 'Azerty@@00');
-
-        await Promise.all([
-            page.waitForNavigation(),
-            page.click('button[type="submit"]'), // selector for the login button
-        ]);
-        console.log("Authentication with success ... ")
+        await goToErressource(page)
 
 
         await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
@@ -71,7 +72,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         console.log('navigation to scopus...')
         // await browser.close();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000);
         console.log('debut de scroll...')
         await autoScroll(page);
         console.log('fin de scroll...')
@@ -154,7 +155,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             citationsPerYear,
         };
 
-        await res.send({ "author": { authorId, platform: "scopus", ...author } });
+        res.send({ "author": { authorId, platform: "scopus", ...author } });
 
 
     } catch (error) {
