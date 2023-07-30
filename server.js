@@ -28,13 +28,25 @@ app.get("/test",(req, res) =>{
     res.send('server for web web scraping is running ...')
 })
 
+
+
+let browser;
+
+// Function to launch the Puppeteer browser if not already launched.
+async function getBrowser() {
+    if (!browser) {
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        });
+    }
+    return browser;
+}
+
 app.get('/auth/scopus/:authorId',async (req, res) =>{
     const {authorId} = req.params
     try {
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] // Ajoutez d'autres arguments au besoin
-        });
+        const browser = await getBrowser();
         const page = await browser.newPage();
         // Définir l'en-tête User-Agent personnalisé
         await page.setUserAgent('Chrome/96.0.4664.93');
@@ -64,7 +76,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await autoScroll(page);
         console.log('fin de scroll...')
 
-        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:5000});
+        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
@@ -81,19 +93,19 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         // await page.waitForTimeout(1000);
         console.log("time out started...")
-        await page.waitForTimeout(1000);
+        // await page.waitForTimeout(1000);
         console.log("time out finished...")
         await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
         console.log('select item for pagination...')
         await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
         console.log('set value in item...')
-        await page.waitForTimeout(1000);
+        // await page.waitForTimeout(1000);
 
         console.log('debut de scroll...')
         await autoScroll(page);
         console.log('fin de scroll...')
 
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         const publications = await page.evaluate(() =>
             Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
                 title:e.querySelector('h4 span').innerText,
