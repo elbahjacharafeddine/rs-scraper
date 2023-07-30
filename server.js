@@ -32,7 +32,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
     const {authorId} = req.params
     try {
         const browser = await puppeteer.launch({
-            headless: false,
+            headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox'] // Ajoutez d'autres arguments au besoin
         });
         const page = await browser.newPage();
