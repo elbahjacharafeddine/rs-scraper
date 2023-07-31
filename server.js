@@ -73,10 +73,10 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         console.log('navigation to scopus...')
         // await browser.close();
-        await page.waitForTimeout(2000);
-        console.log('debut de scroll...')
+        await page.waitForTimeout(1000);
+        console.log('start scrolling...')
         await autoScroll(page);
-        console.log('fin de scroll...')
+        console.log('End of scrolling...')
 
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
 
@@ -93,19 +93,19 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         }
         const interests = []
 
-        // await page.waitForTimeout(1000);
-        console.log("time out started...")
-        // await page.waitForTimeout(1000);
-        console.log("time out finished...")
+        // // await page.waitForTimeout(1000);
+        // console.log("time out started...")
+        // // await page.waitForTimeout(1000);
+        // console.log("time out finished...")
         await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
         console.log('select item for pagination...')
         await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
         console.log('set value in item...')
         // await page.waitForTimeout(1000);
 
-        console.log('debut de scroll...')
+        console.log('start scrolling...')
         await autoScroll(page);
-        console.log('fin de scroll...')
+        console.log('End of scrolling...')
 
         await page.waitForTimeout(500);
         const publications = await page.evaluate(() =>
@@ -157,7 +157,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         };
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
-        console.log("response has sended")
+        console.log("the response has been sent")
 
 
     } catch (error) {
