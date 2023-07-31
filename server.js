@@ -73,12 +73,12 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
 
         console.log('navigation to scopus...')
         // await browser.close();
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(1500);
         console.log('start scrolling...')
         await autoScroll(page);
         console.log('End of scrolling...')
 
-        // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
+        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
