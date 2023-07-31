@@ -78,7 +78,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         await autoScroll(page);
         console.log('fin de scroll...')
 
-        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
+        // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
 
         // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
 
