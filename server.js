@@ -17,6 +17,7 @@ app.use(cors());
 app.use("/screenshots", express.static(__dirname + "/public/screenshots"));
 
 const router = require("./routes");
+const {log} = require("debug");
 app.use("/", router);
 // The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
@@ -156,6 +157,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         };
 
         res.send({ "author": { authorId, platform: "scopus", ...author } });
+        console.log("response has sended")
 
 
     } catch (error) {
