@@ -5,6 +5,8 @@ dotenv.config();
 const puppeteer = require('puppeteer')
 
 const app = express();
+const WebSocket = require('ws');
+
 
 const Sentry = require('@sentry/node');
 Sentry.init({ dsn: 'https://80a12083a1774420b431700d1d2cf56f@o433230.ingest.sentry.io/5387943' });
@@ -18,17 +20,18 @@ app.use("/screenshots", express.static(__dirname + "/public/screenshots"));
 
 const router = require("./routes");
 const {log} = require("debug");
+const http = require("http");
 app.use("/", router);
 // The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
 
-app.listen(process.env.PORT || 2000, () =>
-  console.log("Server started on port :", process.env.PORT || 2000)
-);
+// app.listen(process.env.PORT || 2000, () =>
+//   console.log("Server http started on port :", process.env.PORT || 2000)
+// );
+
 app.get("/test",(req, res) =>{
     res.send('server for web web scraping is running ...')
 })
-
 
 
 let browser;
@@ -41,7 +44,7 @@ async function getBrowser() {
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
-return browser;
+    return browser;
 }
 
 async function goToErressource(page) {
@@ -54,6 +57,161 @@ async function goToErressource(page) {
     ]);
     console.log("Authentication with success ... ");
 }
+
+
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+wss.on('connection', async (ws) => {
+    console.log('WebSocket connection established');
+
+    ws.on('message', async (message) => {
+        const data = JSON.parse(message);
+        console.log(`Received ID: ${data.id.toString()}`);
+        // const authorId = `${data.id.toString()}`
+        const authorId = 57195491943;
+        try {
+            const browser = await getBrowser();
+            const page = await browser.newPage();
+            // Définir l'en-tête User-Agent personnalisé
+            await page.setUserAgent('Chrome/96.0.4664.93');
+            await page.setDefaultNavigationTimeout(85000);
+            // await page.waitForFunction(() => document.readyState === 'complete');
+            const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+            await goToErressource(page)
+        //
+        //
+            await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
+            await navigationPromise; // Wait for the DOM content to be fully loaded
+        //
+            console.log('navigation to scopus...')
+            // await browser.close();
+            await page.waitForTimeout(1500);
+            console.log('start scrolling...')
+            await autoScroll(page);
+            console.log('End of scrolling...')
+            await page.waitForTimeout(1000)
+            await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
+
+            // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
+
+            const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
+            // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
+            const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+            let h_index = ''
+            try {
+                h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc", (e) => e.textContent)
+            } catch (error) {
+                console.log("")
+            }
+            const interests = []
+
+            // await page.waitForTimeout(1000);
+            console.log("time out started...")
+            await page.waitForTimeout(1000);
+            console.log("time out finished...")
+            await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+            console.log('select item for pagination...')
+            await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
+            console.log('set value in item...')
+            await page.waitForTimeout(1000);
+            //
+            console.log('start scrolling...')
+            await autoScroll(page);
+            console.log('End of scrolling...')
+
+            await page.waitForTimeout(1000);
+            const publications = await page.evaluate(() =>
+                Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
+                    title: e.querySelector('h4 span').innerText,
+                    authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
+                    citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
+                    year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
+                    source: e.querySelector('span.text-bold').innerText,
+                })));
+
+            const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
+            let pages = await browser.pages();
+            await Promise.all(pages.map(page =>page.close()));
+            await browser.close();
+
+            const citationsPerYear = allPath.map(item => {
+                const [yearString, citationsString] = item.split(':');
+                const year = parseInt(yearString.trim());
+                const citations = parseInt(citationsString.trim());
+
+                return {year, citations};
+            });
+            const totalCitations = citationsPerYear.reduce((acc, item) => acc + item.citations, 0);
+            const indexes = [
+                {
+                    name: "citations",
+                    total: totalCitations,
+                    lastFiveYears: "",
+                },
+                {
+                    name: "h-index",
+                    total: h_index,
+                    lastFiveYears: "",
+                },
+            ];
+
+            // await page.waitForTimeout(1000);
+
+
+
+
+            console.log("good elbahja")
+            const authorr ={
+                name,
+                profilePicture: "",
+                univer,
+                email: "",
+                indexes,
+                interests,
+                publications,
+                coauthors: [],
+                citationsPerYear,
+            };
+            const author = {"author": {authorId, platform: "scopus", ...authorr}}
+
+            ws.send(JSON.stringify(author));
+            console.log("the response has been sent")
+
+
+
+        } catch (error) {
+            console.error('Une erreur s\'est produite :', error);
+        }
+
+    });
+
+
+
+    // const interval = setInterval(() => {
+
+
+    const jsonData2 = {
+        message: 'Hello ELBAHJA Charafeddine',
+        timestamp: new Date().toISOString()
+    };
+
+    ws.send(JSON.stringify(jsonData2))
+    // }, 1000); // Envoie toutes les 1000 ms (1 seconde)
+    //
+    // ws.on('close', () => {
+    //     console.log('WebSocket connection closed');
+    //     clearInterval(interval); // Arrête l'envoi après la fermeture de la connexion
+    // });
+});
+
+const port = 2000
+server.listen(port, () => {
+    console.log(`Server started on http://localhost:${port}`);
+});
+
+
+
 
 app.get('/auth/scopus/:authorId',async (req, res) =>{
     const {authorId} = req.params
@@ -164,6 +322,9 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         console.error('Une erreur s\'est produite :', error);
     }
 })
+
+
+
 
 
 async function autoScroll(page){
