@@ -67,8 +67,8 @@ wss.on('connection', async (ws) => {
 
     ws.on('message', async (message) => {
         const data = JSON.parse(message);
-        console.log(`Received ID: ${data.id.toString()}`);
-        const authorId = `${data.id.toString()}`
+        console.log(`Received ID: ${data}`);
+        const authorId = `${data}`
         // const authorId = 57195491943;
         try {
             const browser = await getBrowser();
