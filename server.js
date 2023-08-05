@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -58,10 +58,16 @@ async function goToErressource(page) {
     console.log("Authentication with success ... ");
 }
 
-
-
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+let res ={
+    step:'Recherchons dans la base ',
+    plateforme :"SCOPUS",
+    color:'white',
+    background:'orange'
+}
+const response ={res:res}
 wss.on('connection', async (ws) => {
     console.log('WebSocket connection established');
 
@@ -79,24 +85,15 @@ wss.on('connection', async (ws) => {
             // await page.waitForFunction(() => document.readyState === 'complete');
             const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
             await goToErressource(page)
-        //
-        //
+            ws.send(JSON.stringify(response))
             await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
             await navigationPromise; // Wait for the DOM content to be fully loaded
-        //
             console.log('navigation to scopus...')
-            // await browser.close();
-            await page.waitForTimeout(1500);
-            console.log('start scrolling...')
-            await autoScroll(page);
-            console.log('End of scrolling...')
+
             await page.waitForTimeout(1000)
             await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
 
-            // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
-
             const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
-            // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
             const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
             let h_index = ''
             try {
@@ -107,34 +104,32 @@ wss.on('connection', async (ws) => {
             const interests = []
 
             // await page.waitForTimeout(1000);
-            console.log("time out started...")
-            await page.waitForTimeout(1000);
-            console.log("time out finished...")
-            await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
-            console.log('select item for pagination...')
-            await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
-            console.log('set value in item...')
-            await page.waitForTimeout(1000);
+            // console.log("time out started...")
+            // await page.waitForTimeout(1500);
+            // console.log("time out finished...")
+            // await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+            // console.log('select item for pagination...')
+            // await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
+            // console.log('set value in item...')
+            // await page.waitForTimeout(1000);
             //
             console.log('start scrolling...')
             await autoScroll(page);
             console.log('End of scrolling...')
 
-            await page.waitForTimeout(1000);
-            const publications = await page.evaluate(() =>
-                Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
-                    title: e.querySelector('h4 span').innerText,
-                    authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
-                    citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
-                    year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
-                    source: e.querySelector('span.text-bold').innerText,
-                })));
+            // await page.waitForTimeout(1000);
+            // const publications = await page.evaluate(() =>
+            //     Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
+            //         title: e.querySelector('h4 span').innerText,
+            //         authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
+            //         citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
+            //         year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
+            //         source: e.querySelector('span.text-bold').innerText,
+            //     })));
 
+            const publications_array = [];
+            let publications = []
             const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-            let pages = await browser.pages();
-            await Promise.all(pages.map(page =>page.close()));
-            await browser.close();
-
             const citationsPerYear = allPath.map(item => {
                 const [yearString, citationsString] = item.split(':');
                 const year = parseInt(yearString.trim());
@@ -156,11 +151,6 @@ wss.on('connection', async (ws) => {
                 },
             ];
 
-            // await page.waitForTimeout(1000);
-
-
-
-
             console.log("good elbahja")
             const authorr ={
                 name,
@@ -175,34 +165,58 @@ wss.on('connection', async (ws) => {
             };
             const author = {"author": {authorId, platform: "scopus", ...authorr}}
 
-            ws.send(JSON.stringify(author));
+            async function extractPublicationDetails(element) {
+                const publication = await element.evaluate((e) => {
+                    return {
+                        title: e.querySelector('h4 span').innerText,
+                        authors: Array.from(new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText))),
+                        citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
+                        year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', '').substring(0, 4),
+                        source: e.querySelector('span.text-bold').innerText,
+                    };
+                });
+
+                    publications.push(publication);
+
+                await ws.send(JSON.stringify(author));
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            await page.waitForSelector('.ViewType-module__tdc9K li');
+            const elements = await page.$$('.ViewType-module__tdc9K li');
+            for (const element of elements) {
+                await extractPublicationDetails(element);
+            }
+
+            const paginationLink = await page.$$('.micro-ui-namespace els-paginator li');
+            paginationLink.shift()
+            paginationLink.shift()
+            paginationLink.pop()
+            for(const e of paginationLink){
+                console.log("element is clicked ...!")
+                await e.click()
+                await page.waitForTimeout(500)
+                await page.waitForSelector('.ViewType-module__tdc9K li');
+                const elements = await page.$$('.ViewType-module__tdc9K li');
+                for (const element of elements) {
+                    await extractPublicationDetails(element);
+                }
+            }
+            let pages = await browser.pages();
+            await Promise.all(pages.map(page =>page.close()));
+            await browser.close();
             console.log("the response has been sent")
 
-
-
         } catch (error) {
-            console.error('Une erreur s\'est produite :', error);
+            console.log("************  erreur  ************")
+            const message ={state:"erreur"}
+            console.log(error)
+            ws.send(JSON.stringify(message))
+
         }
-
     });
-
-
-
-    // const interval = setInterval(() => {
-
-
-    const jsonData2 = {
-        message: 'Hello ELBAHJA Charafeddine',
-        timestamp: new Date().toISOString()
-    };
-
-    ws.send(JSON.stringify(jsonData2))
-    // }, 1000); // Envoie toutes les 1000 ms (1 seconde)
-    //
-    // ws.on('close', () => {
-    //     console.log('WebSocket connection closed');
-    //     clearInterval(interval); // Arrête l'envoi après la fermeture de la connexion
-    // });
+    ws.on('close', () => {
+        console.log('WebSocket connection closed');
+    });
 });
 
 const port = 2000
