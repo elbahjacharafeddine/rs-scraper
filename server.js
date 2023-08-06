@@ -90,8 +90,8 @@ wss.on('connection', async (ws) => {
             await navigationPromise; // Wait for the DOM content to be fully loaded
             console.log('navigation to scopus...')
 
-            await page.waitForTimeout(1000)
-          //  await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
+            await page.waitForTimeout(1500)
+           await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
 
             const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
             const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
