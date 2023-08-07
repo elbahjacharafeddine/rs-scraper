@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -49,8 +49,8 @@ async function getBrowser() {
 
 async function goToErressource(page) {
     await page.goto('https://eressources.imist.ma/login');
-    await page.type('#email', 'lachgar.m@ucd.ac.ma');
-    await page.type('#password', 'Azerty@@00');
+    await page.type('#email', 'e-elbahja.c@ucd.ma');
+    await page.type('#password', 'LEv.q8XeGxP2Pid');
     await Promise.all([
         page.waitForNavigation(), // Wait for the navigation to complete after clicking the login button.
         page.click('button[type="submit"]'),
@@ -73,150 +73,221 @@ wss.on('connection', async (ws) => {
 
     ws.on('message', async (message) => {
         const data = JSON.parse(message);
-        console.log(`Received ID: ${data}`);
-        const authorId = `${data}`
-        // const authorId = 57195491943;
-        try {
-            const browser = await getBrowser();
-            const page = await browser.newPage();
-            // Définir l'en-tête User-Agent personnalisé
-            await page.setUserAgent('Chrome/96.0.4664.93');
-            await page.setDefaultNavigationTimeout(85000);
-            // await page.waitForFunction(() => document.readyState === 'complete');
-            const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
-            await goToErressource(page)
-            ws.send(JSON.stringify(response))
-            await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
-            await navigationPromise; // Wait for the DOM content to be fully loaded
-            console.log('navigation to scopus...')
-
-            await page.waitForTimeout(1500)
-           await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
-
-            const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
-            const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
-            let h_index = ''
+        if(data.authorId){
+            console.log(`Received ID: ${data.authorId}`)
+            const authorId = data.authorId
             try {
-                h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc", (e) => e.textContent)
-            } catch (error) {
-                console.log("")
-            }
-            const interests = []
+                const browser = await getBrowser();
+                const page = await browser.newPage();
+                // Définir l'en-tête User-Agent personnalisé
+                await page.setUserAgent('Chrome/96.0.4664.93');
+                await page.setDefaultNavigationTimeout(85000);
+                // await page.waitForFunction(() => document.readyState === 'complete');
+                const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+                await goToErressource(page)
+                ws.send(JSON.stringify(response))
+                await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
+                await navigationPromise; // Wait for the DOM content to be fully loaded
+                console.log('navigation to scopus...')
 
-            // await page.waitForTimeout(1000);
-            // console.log("time out started...")
-            // await page.waitForTimeout(1500);
-            // console.log("time out finished...")
-            // await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
-            // console.log('select item for pagination...')
-            // await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
-            // console.log('set value in item...')
-            // await page.waitForTimeout(1000);
-            //
-            console.log('start scrolling...')
-            await autoScroll(page);
-            console.log('End of scrolling...')
+                await page.waitForTimeout(1500)
+               await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
 
-            // await page.waitForTimeout(1000);
-            // const publications = await page.evaluate(() =>
-            //     Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
-            //         title: e.querySelector('h4 span').innerText,
-            //         authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
-            //         citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
-            //         year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
-            //         source: e.querySelector('span.text-bold').innerText,
-            //     })));
+                const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
+                const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+                let h_index = ''
+                try {
+                    h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc", (e) => e.textContent)
+                } catch (error) {
+                    console.log("")
+                }
+                const interests = []
 
-            const publications_array = [];
-            let publications = []
-            const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-            const citationsPerYear = allPath.map(item => {
-                const [yearString, citationsString] = item.split(':');
-                const year = parseInt(yearString.trim());
-                const citations = parseInt(citationsString.trim());
+                // await page.waitForTimeout(1000);
+                // console.log("time out started...")
+                // await page.waitForTimeout(1500);
+                // console.log("time out finished...")
+                // await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+                // console.log('select item for pagination...')
+                // await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
+                // console.log('set value in item...')
+                // await page.waitForTimeout(1000);
+                //
+                console.log('start scrolling...')
+                await autoScroll(page);
+                console.log('End of scrolling...')
 
-                return {year, citations};
-            });
-            const totalCitations = citationsPerYear.reduce((acc, item) => acc + item.citations, 0);
-            const indexes = [
-                {
-                    name: "citations",
-                    total: totalCitations,
-                    lastFiveYears: "",
-                },
-                {
-                    name: "h-index",
-                    total: h_index,
-                    lastFiveYears: "",
-                },
-            ];
+                // await page.waitForTimeout(1000);
+                // const publications = await page.evaluate(() =>
+                //     Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
+                //         title: e.querySelector('h4 span').innerText,
+                //         authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
+                //         citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
+                //         year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
+                //         source: e.querySelector('span.text-bold').innerText,
+                //     })));
 
-            console.log("good elbahja")
-            const authorr ={
-                name,
-                profilePicture: "",
-                univer,
-                email: "",
-                indexes,
-                interests,
-                publications,
-                coauthors: [],
-                citationsPerYear,
-            };
-            const author = {"author": {authorId, platform: "scopus", ...authorr}}
+                const publications_array = [];
+                let publications = []
+                const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
+                const citationsPerYear = allPath.map(item => {
+                    const [yearString, citationsString] = item.split(':');
+                    const year = parseInt(yearString.trim());
+                    const citations = parseInt(citationsString.trim());
 
-            async function extractPublicationDetails(element) {
-                const publication = await element.evaluate((e) => {
-                    return {
-                        title: e.querySelector('h4 span').innerText,
-                        authors: Array.from(new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText))),
-                        citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
-                        year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', '').substring(0, 4),
-                        source: e.querySelector('span.text-bold').innerText,
-                    };
+                    return {year, citations};
                 });
+                const totalCitations = citationsPerYear.reduce((acc, item) => acc + item.citations, 0);
+                const indexes = [
+                    {
+                        name: "citations",
+                        total: totalCitations,
+                        lastFiveYears: "",
+                    },
+                    {
+                        name: "h-index",
+                        total: h_index,
+                        lastFiveYears: "",
+                    },
+                ];
 
-                    publications.push(publication);
+                console.log("good elbahja")
+                const authorr ={
+                    name,
+                    profilePicture: "",
+                    univer,
+                    email: "",
+                    indexes,
+                    interests,
+                    publications,
+                    coauthors: [],
+                    citationsPerYear,
+                };
+                const author = {"author": {authorId, platform: "scopus", ...authorr}}
 
-                await ws.send(JSON.stringify(author));
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            await page.waitForSelector('.ViewType-module__tdc9K li');
-            const elements = await page.$$('.ViewType-module__tdc9K li');
-            for (const element of elements) {
-                await extractPublicationDetails(element);
-            }
+                async function extractPublicationDetails(element) {
+                    const publication = await element.evaluate((e) => {
+                        return {
+                            title: e.querySelector('h4 span').innerText,
+                            authors: Array.from(new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText))),
+                            citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
+                            year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', '').substring(0, 4),
+                            source: e.querySelector('span.text-bold').innerText,
+                        };
+                    });
 
-            const paginationLink = await page.$$('.micro-ui-namespace els-paginator li');
-            paginationLink.shift()
-            paginationLink.shift()
-            paginationLink.pop()
-            for(const e of paginationLink){
-                console.log("element is clicked ...!")
-                await e.click()
-                await page.waitForTimeout(500)
+                        publications.push(publication);
+
+                    await ws.send(JSON.stringify(author));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
                 await page.waitForSelector('.ViewType-module__tdc9K li');
                 const elements = await page.$$('.ViewType-module__tdc9K li');
                 for (const element of elements) {
                     await extractPublicationDetails(element);
                 }
+
+                const paginationLink = await page.$$('.micro-ui-namespace els-paginator li');
+                paginationLink.shift()
+                paginationLink.shift()
+                paginationLink.pop()
+                for(const e of paginationLink){
+                    console.log("element is clicked ...!")
+                    await e.click()
+                    await page.waitForTimeout(500)
+                    await page.waitForSelector('.ViewType-module__tdc9K li');
+                    const elements = await page.$$('.ViewType-module__tdc9K li');
+                    for (const element of elements) {
+                        await extractPublicationDetails(element);
+                    }
+                }
+                let pages = await browser.pages();
+                await Promise.all(pages.map(page =>page.close()));
+                await browser.close();
+                console.log("the response has been sent")
+
+            } catch (error) {
+                console.log("************  erreur  ************")
+                const message ={state:"erreur"}
+                console.log(error)
+                ws.send(JSON.stringify(message))
+            }
+        }
+
+        else if(data.journalName && data.year) {
+            console.log(`journal name: ${data.journalName} and year ${data.year}`);
+            const browser = await getBrowser();
+            const page = await browser.newPage();
+            await page.setUserAgent('Chrome/96.0.4664.93');
+            await page.setDefaultNavigationTimeout(85000);
+            // await page.waitForFunction(() => document.readyState === 'complete');
+            const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+            await page.goto('https://www.scimagojr.com/journalsearch.php?q=' + data.journalName)
+            await navigationPromise;
+            const firstLink = await page.evaluate(() => {
+                const linkElement = document.querySelector('.journaldescription .search_results a');
+                return linkElement ? linkElement.getAttribute('href') : null;
+            });
+
+
+            page.goto('https://www.scimagojr.com/'+firstLink)
+            await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+            page.waitForTimeout(1000)
+            const scrollPercentage = 50; // Réglez la valeur du pourcentage ici
+            await autoScrollToPercentage(page, scrollPercentage);
+            page.waitForTimeout(3000)
+            // await page.waitForSelector('body > div:nth-child(15) > div:nth-child(1) > div.cellheader > div.combo_buttons > div.combo_button.table_button.selected_combo_button > img');
+            await page.click('body > div:nth-child(15) > div:nth-child(1) > div.cellheader > div.combo_buttons > div.combo_button.table_button > img');
+
+            await page.waitForTimeout(1000)
+
+            const datta = await page.evaluate(() => {
+                const tableRows = Array.from(document.querySelectorAll('.dashboard .cellcontent table tbody tr'));
+                const rowData = tableRows.map(row => {
+                    const [yearCell, sjrCell] = row.querySelectorAll('td');
+                    return {
+                        year: yearCell.textContent.trim(),
+                        sjr: sjrCell.textContent.trim(),
+                    };
+                });
+                return rowData;
+            });
+            let sjr=0
+            for (const item of datta) {
+                if (item.year === data.year) {
+                    sjr = item.sjr;
+                    const journal= {
+                        SJR: sjr,
+                    }
+                    // await page.close()
+                    // await browser.close()
+                    ws.send(JSON.stringify( journal))
+                    break;
+                }
+
+                const journal= {
+                    SJR: sjr,
+                }
+                ws.send(JSON.stringify( journal))
             }
             let pages = await browser.pages();
             await Promise.all(pages.map(page =>page.close()));
             await browser.close();
-            console.log("the response has been sent")
-
-        } catch (error) {
-            console.log("************  erreur  ************")
-            const message ={state:"erreur"}
-            console.log(error)
-            ws.send(JSON.stringify(message))
 
         }
+
+        else {
+            const message ={state:"erreur"}
+            ws.send(JSON.stringify(message))
+        }
     });
+
+
     ws.on('close', () => {
         console.log('WebSocket connection closed');
     });
+
+
 });
 
 const port = 2000
@@ -245,3 +316,32 @@ async function autoScroll(page){
         });
     });
 }
+
+
+async function autoScrollToPercentage(page, percentage) {
+    if (percentage <= 0 || percentage >= 100) {
+        throw new Error('Percentage value should be between 0 and 100');
+    }
+
+    await page.evaluate(async (targetPercentage) => {
+        await new Promise((resolve) => {
+            const targetScrollHeight = Math.floor((targetPercentage / 100) * document.body.scrollHeight);
+            let currentScrollHeight = 0;
+            const distance = 300;
+
+            const timer = setInterval(() => {
+                const scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                currentScrollHeight += distance;
+
+                if (currentScrollHeight >= targetScrollHeight || currentScrollHeight >= scrollHeight - window.innerHeight) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    }, percentage);
+}
+
+
+
