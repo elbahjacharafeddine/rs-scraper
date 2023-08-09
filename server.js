@@ -94,7 +94,12 @@ wss.on('connection', async (ws) => {
                // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content', {timeout: 4000});
 
                 const name = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',', ''))
-                const univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+                let univer=''
+                try {
+                    univer = await page.$eval('#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > ul > li.AuthorHeader-module__DRxsE > span > a > span.Typography-module__lVnit.Typography-module__Nfgvc.Button-module__Imdmt', (e) => e.textContent.trim())
+                }catch (e) {
+                    console.log('university not found ...')
+                }
                 let h_index = ''
                 try {
                     h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc", (e) => e.textContent)
@@ -103,31 +108,10 @@ wss.on('connection', async (ws) => {
                 }
                 const interests = []
 
-                // await page.waitForTimeout(1000);
-                // console.log("time out started...")
-                // await page.waitForTimeout(1500);
-                // console.log("time out finished...")
-                // await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
-                // console.log('select item for pagination...')
-                // await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
-                // console.log('set value in item...')
-                // await page.waitForTimeout(1000);
-                //
                 console.log('start scrolling...')
                 await autoScroll(page);
                 console.log('End of scrolling...')
 
-                // await page.waitForTimeout(1000);
-                // const publications = await page.evaluate(() =>
-                //     Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
-                //         title: e.querySelector('h4 span').innerText,
-                //         authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
-                //         citation: e.querySelector('.col-3 span:nth-child(1)').innerText,
-                //         year: e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled', "").substring(0, 4),
-                //         source: e.querySelector('span.text-bold').innerText,
-                //     })));
-
-                const publications_array = [];
                 let publications = []
                 const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
                 const citationsPerYear = allPath.map(item => {
@@ -215,67 +199,74 @@ wss.on('connection', async (ws) => {
         }
 
         else if(data.journalName && data.year) {
-            console.log(`journal name: ${data.journalName} and year ${data.year}`);
-            const browser = await getBrowser();
-            const page = await browser.newPage();
-            await page.setUserAgent('Chrome/96.0.4664.93');
-            await page.setDefaultNavigationTimeout(85000);
-            // await page.waitForFunction(() => document.readyState === 'complete');
-            const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
-            await page.goto('https://www.scimagojr.com/journalsearch.php?q=' + data.journalName)
-            await navigationPromise;
-            const firstLink = await page.evaluate(() => {
-                const linkElement = document.querySelector('.journaldescription .search_results a');
-                return linkElement ? linkElement.getAttribute('href') : null;
-            });
-
-
-            page.goto('https://www.scimagojr.com/'+firstLink)
-            await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
-            page.waitForTimeout(1000)
-            const scrollPercentage = 50; // Réglez la valeur du pourcentage ici
-            await autoScrollToPercentage(page, scrollPercentage);
-            page.waitForTimeout(3000)
-            // await page.waitForSelector('body > div:nth-child(15) > div:nth-child(1) > div.cellheader > div.combo_buttons > div.combo_button.table_button.selected_combo_button > img');
-            await page.click('body > div:nth-child(15) > div:nth-child(1) > div.cellheader > div.combo_buttons > div.combo_button.table_button > img');
-
-            await page.waitForTimeout(1000)
-
-            const datta = await page.evaluate(() => {
-                const tableRows = Array.from(document.querySelectorAll('.dashboard .cellcontent table tbody tr'));
-                const rowData = tableRows.map(row => {
-                    const [yearCell, sjrCell] = row.querySelectorAll('td');
-                    return {
-                        year: yearCell.textContent.trim(),
-                        sjr: sjrCell.textContent.trim(),
-                    };
+            try {
+                console.log(`journal name: ${data.journalName} and year ${data.year}`);
+                const browser = await getBrowser();
+                const page = await browser.newPage();
+                await page.setUserAgent('Chrome/96.0.4664.93');
+                await page.setDefaultNavigationTimeout(85000);
+                // await page.waitForFunction(() => document.readyState === 'complete');
+                const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+                await page.goto('https://www.scimagojr.com/journalsearch.php?q=' + data.journalName)
+                await navigationPromise;
+                const firstLink = await page.evaluate(() => {
+                    const linkElement = document.querySelector('.journaldescription .search_results a');
+                    return linkElement ? linkElement.getAttribute('href') : null;
                 });
-                return rowData;
-            });
-            let sjr=0
-            for (const item of datta) {
-                if (item.year === data.year) {
-                    sjr = item.sjr;
+
+
+                page.goto('https://www.scimagojr.com/'+firstLink)
+                await page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+                page.waitForTimeout(1000)
+                const scrollPercentage = 40; // Réglez la valeur du pourcentage ici
+                await autoScrollToPercentage(page, scrollPercentage);
+                await page.waitForTimeout(3000);
+
+                const selector = 'body > div.dashboard > div.cell1x1.dynamiccell > div.cellheader > div.combo_buttons > div.combo_button.table_button > img'
+                await page.waitForSelector(selector);
+                await page.click(selector);
+
+                await page.waitForTimeout(1000)
+
+                const datta = await page.evaluate(() => {
+                    const tableRows = Array.from(document.querySelectorAll('.dashboard .cellcontent table tbody tr'));
+                    const rowData = tableRows.map(row => {
+                        const [yearCell, sjrCell] = row.querySelectorAll('td');
+                        return {
+                            year: yearCell.textContent.trim(),
+                            sjr: sjrCell.textContent.trim(),
+                        };
+                    });
+                    return rowData;
+                });
+                let sjr="-"
+                for (const item of datta) {
+                    if (item.year === data.year) {
+                        sjr = item.sjr;
+                        const journal= {
+                            SJR: sjr,
+                        }
+                        ws.send(JSON.stringify( journal))
+                        break;
+                    }
+
                     const journal= {
                         SJR: sjr,
                     }
-                    // await page.close()
-                    // await browser.close()
                     ws.send(JSON.stringify( journal))
-                    break;
                 }
-
+                let pages = await browser.pages();
+                await Promise.all(pages.map(page =>page.close()));
+                await browser.close();
+            }catch (e) {
+                const sjr = '-'
+                console.log('error for searching article'+e)
                 const journal= {
                     SJR: sjr,
                 }
                 ws.send(JSON.stringify( journal))
             }
-            let pages = await browser.pages();
-            await Promise.all(pages.map(page =>page.close()));
-            await browser.close();
-
         }
-
         else {
             const message ={state:"erreur"}
             ws.send(JSON.stringify(message))
@@ -286,8 +277,6 @@ wss.on('connection', async (ws) => {
     ws.on('close', () => {
         console.log('WebSocket connection closed');
     });
-
-
 });
 
 const port = 2000
@@ -327,7 +316,7 @@ async function autoScrollToPercentage(page, percentage) {
         await new Promise((resolve) => {
             const targetScrollHeight = Math.floor((targetPercentage / 100) * document.body.scrollHeight);
             let currentScrollHeight = 0;
-            const distance = 300;
+            const distance = 200;
 
             const timer = setInterval(() => {
                 const scrollHeight = document.body.scrollHeight;
