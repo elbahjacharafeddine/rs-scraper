@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
