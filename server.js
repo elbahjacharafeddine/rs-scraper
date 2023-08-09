@@ -112,7 +112,8 @@ wss.on('connection', async (ws) => {
                 await autoScroll(page);
                 console.log('End of scrolling...')
 
-                let publications = []
+                let publicationss = []
+                let publications =[]
                 const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
                 const citationsPerYear = allPath.map(item => {
                     const [yearString, citationsString] = item.split(':');
@@ -162,9 +163,12 @@ wss.on('connection', async (ws) => {
 
                         publications.push(publication);
 
-                    await ws.send(JSON.stringify(author));
+                        await ws.send(JSON.stringify(author));
                     await new Promise(resolve => setTimeout(resolve, 3000));
                 }
+
+
+
                 await page.waitForSelector('.ViewType-module__tdc9K li');
                 const elements = await page.$$('.ViewType-module__tdc9K li');
                 for (const element of elements) {
@@ -175,10 +179,12 @@ wss.on('connection', async (ws) => {
                 paginationLink.shift()
                 paginationLink.shift()
                 paginationLink.pop()
+
                 for(const e of paginationLink){
                     console.log("element is clicked ...!")
                     await e.click()
-                    await page.waitForTimeout(500)
+                    await page.waitForTimeout(1500)
+
                     await page.waitForSelector('.ViewType-module__tdc9K li');
                     const elements = await page.$$('.ViewType-module__tdc9K li');
                     for (const element of elements) {
@@ -189,12 +195,23 @@ wss.on('connection', async (ws) => {
                 await Promise.all(pages.map(page =>page.close()));
                 await browser.close();
                 console.log("the response has been sent")
+                const fin = {
+                    fin :true,
+                }
+                ws.send(JSON.stringify(fin))
 
             } catch (error) {
                 console.log("************  erreur  ************")
                 const message ={state:"erreur"}
                 console.log(error)
                 ws.send(JSON.stringify(message))
+                let pages = await browser.pages();
+                await Promise.all(pages.map(page =>page.close()));
+                await browser.close();
+                const fin = {
+                    fin :false,
+                }
+                ws.send(JSON.stringify(fin))
             }
         }
 
@@ -243,21 +260,14 @@ wss.on('connection', async (ws) => {
                 for (const item of datta) {
                     if (item.year === data.year) {
                         sjr = item.sjr;
-                        const journal= {
-                            SJR: sjr,
-                        }
-                        ws.send(JSON.stringify( journal))
                         break;
                     }
-
-                    const journal= {
-                        SJR: sjr,
-                    }
-                    ws.send(JSON.stringify( journal))
                 }
-                let pages = await browser.pages();
-                await Promise.all(pages.map(page =>page.close()));
-                await browser.close();
+                const journal= {
+                    SJR: sjr,
+                }
+                ws.send(JSON.stringify( journal))
+                console.log("value of SJR has sent with success ...")
             }catch (e) {
                 const sjr = '-'
                 console.log('error for searching article'+e)
@@ -266,10 +276,17 @@ wss.on('connection', async (ws) => {
                 }
                 ws.send(JSON.stringify( journal))
             }
+            let pages = await browser.pages();
+            await Promise.all(pages.map(page =>page.close()));
+            await browser.close();
         }
+
         else {
             const message ={state:"erreur"}
             ws.send(JSON.stringify(message))
+            let pages = await browser.pages();
+            await Promise.all(pages.map(page =>page.close()));
+            await browser.close();
         }
     });
 
