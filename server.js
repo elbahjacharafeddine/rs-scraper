@@ -301,7 +301,115 @@ server.listen(port, () => {
     console.log(`Server started on http://localhost:${port}`);
 });
 
+app.get('/auth/scopus/:authorId',async (req, res) =>{
+    const {authorId} = req.params
+    try {
+        const browser = await getBrowser();
+        const page = await browser.newPage();
+        // Définir l'en-tête User-Agent personnalisé
+        await page.setUserAgent('Chrome/96.0.4664.93');
+        await page.setDefaultNavigationTimeout(85000);
+        // await page.waitForFunction(() => document.readyState === 'complete');
+        // const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
+        await goToErressource(page)
 
+
+        await page.goto('https://www-scopus-com.eressources.imist.ma/authid/detail.uri?authorId=' + authorId);
+        // await navigationPromise; // Wait for the DOM content to be fully loaded
+
+        console.log('navigation to scopus...')
+        // await browser.close();
+        await page.waitForTimeout(1500);
+        console.log('start scrolling...')
+        await autoScroll(page);
+        console.log('End of scrolling...')
+
+        await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
+
+        // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
+
+        const name = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-module_hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',''))
+        // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
+        const univer = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-modulehwM1N.offset-lg-2 > ul > li.AuthorHeader-moduleDRxsE > span > a > span.Typography-modulelVnit.Typography-moduleNfgvc.Button-module_Imdmt', (e) => e.textContent.trim())
+        let h_index=''
+        try {
+            h_index = await page.$eval("#scopus-author-profile-page-control-microui_general-information-content > div.Col-modulehwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-modulelVnit.Typography-moduleix7bs.Typography-module_Nfgvc",(e) =>e.textContent)
+        }catch (error){
+            console.log("")
+        }
+        const interests = []
+
+        // // await page.waitForTimeout(1000);
+        // console.log("time out started...")
+        // // await page.waitForTimeout(1000);
+        // console.log("time out finished...")
+        await page.waitForSelector('#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select');
+        console.log('select item for pagination...')
+        await page.select("#documents-panel > div > div.Columns-module__FxWfo > div:nth-child(2) > div > els-results-layout > els-paginator > nav > els-select > div > label > select", "200")
+        console.log('set value in item...')
+        // await page.waitForTimeout(1000);
+
+        console.log('start scrolling...')
+        await autoScroll(page);
+        console.log('End of scrolling...')
+
+        await page.waitForTimeout(500);
+        const publications = await page.evaluate(() =>
+            Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
+                title:e.querySelector('h4 span').innerText,
+                authors: Array.from((new Set(Array.from(e.querySelectorAll('.author-list span'), (authorElement) => authorElement.innerText)))),
+                citation : e.querySelector('.col-3 span:nth-child(1)').innerText,
+                year:e.querySelector('.text-meta span:nth-child(2)').innerText.replace('this link is disabled',"").substring(0,4),
+                source:e.querySelector('span.text-bold').innerText,
+            })));
+
+        const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
+        await browser.close();
+
+        const citationsPerYear = allPath.map(item => {
+            const [yearString, citationsString] = item.split(':');
+            const year = parseInt(yearString.trim());
+            const citations = parseInt(citationsString.trim());
+
+            return { year, citations };
+        });
+        const totalCitations = citationsPerYear.reduce((acc, item) => acc + item.citations, 0);
+        const indexes = [
+            {
+                name: "citations",
+                total: totalCitations,
+                lastFiveYears: "",
+            },
+            {
+                name: "h-index",
+                total: h_index,
+                lastFiveYears: "",
+            },
+        ];
+
+        // await page.waitForTimeout(1000);
+
+
+        const author ={
+            name,
+            profilePicture: "",
+            univer,
+            email: "",
+            indexes,
+            interests,
+            publications,
+            coauthors: [],
+            citationsPerYear,
+        };
+
+        res.send({ "author": { authorId, platform: "scopus", ...author } });
+        console.log("the response has been sent")
+
+
+    } catch (error) {
+        console.error('Une erreur s\'est produite :', error);
+    }
+})
 
 
 async function autoScroll(page){
