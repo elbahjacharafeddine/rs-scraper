@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -317,20 +317,18 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         // await navigationPromise; // Wait for the DOM content to be fully loaded
 
         console.log('navigation to scopus...')
-        // await browser.close();
-        await page.waitForTimeout(1500);
-        console.log('start scrolling...')
-        await autoScroll(page);
-        console.log('End of scrolling...')
 
         await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content',{timeout:4000});
 
-        // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 70000 })
-
-        const name = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-module_hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',''))
+        // await page.waitForSelector('.container .AuthorProfilePageControl-module__sgqt5',{ timeout: 3000 })
+        // page.waitForTimeout(1000)
+        // const name = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-module_hwM1N.offset-lg-2 > div > h1 > strong', (e) => e.textContent.trim().replace(',',''))
+            const name =''
         // await page.waitForSelector('#scopus-author-profile-page-control-microui__general-information-content')
-        const univer = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-modulehwM1N.offset-lg-2 > ul > li.AuthorHeader-moduleDRxsE > span > a > span.Typography-modulelVnit.Typography-moduleNfgvc.Button-module_Imdmt', (e) => e.textContent.trim())
+        // const univer = await page.$eval('#scopus-author-profile-page-control-microui_general-information-content > div.Col-modulehwM1N.offset-lg-2 > ul > li.AuthorHeader-moduleDRxsE > span > a > span.Typography-modulelVnit.Typography-moduleNfgvc.Button-module_Imdmt', (e) => e.textContent.trim())
+        const univer =''
         let h_index=''
+
         try {
             h_index = await page.$eval("#scopus-author-profile-page-control-microui_general-information-content > div.Col-modulehwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-modulelVnit.Typography-moduleix7bs.Typography-module_Nfgvc",(e) =>e.textContent)
         }catch (error){
@@ -338,8 +336,11 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         }
         const interests = []
 
-
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1000);
+        console.log('start scrolling...')
+        await autoScroll(page);
+        console.log('End of scrolling...')
+        await page.waitForTimeout(1500);
         const publications = await page.evaluate(() =>
             Array.from(document.querySelectorAll('.ViewType-module__tdc9K li'), (e) => ({
                 title:e.querySelector('h4 span').innerText,
