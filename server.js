@@ -312,7 +312,6 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
         // await page.waitForFunction(() => document.readyState === 'complete');
         // const navigationPromise = page.waitForNavigation({ waitUntil: 'domcontentloaded' });
 
-
         await page.goto('https://www.scopus.com/authid/detail.uri?authorId=' + authorId);
         // await navigationPromise; // Wait for the DOM content to be fully loaded
 
@@ -351,9 +350,7 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             })));
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
-        let pages = await browser.pages();
-        await Promise.all(pages.map(page =>page.close()));
-        await browser.close();
+
 
         const citationsPerYear = allPath.map(item => {
             const [yearString, citationsString] = item.split(':');
@@ -398,6 +395,9 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
     } catch (error) {
         console.error('Une erreur s\'est produite :', error);
     }
+    let pages = await browser.pages();
+    await Promise.all(pages.map(page =>page.close()));
+    await browser.close();
 })
 
 
