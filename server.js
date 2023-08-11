@@ -351,6 +351,8 @@ app.get('/auth/scopus/:authorId',async (req, res) =>{
             })));
 
         const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
+        let pages = await browser.pages();
+        await Promise.all(pages.map(page =>page.close()));
         await browser.close();
 
         const citationsPerYear = allPath.map(item => {
