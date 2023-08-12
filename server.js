@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -49,8 +49,9 @@ async function getBrowser() {
 
 async function goToErressource(page) {
     await page.goto('https://eressources.imist.ma/login');
-    await page.type('#email', 'e-elbahja.c@ucd.ma');
-    await page.type('#password', 'LEv.q8XeGxP2Pid');
+    await page.type('#email', 'lachgar.m@ucd.ac.ma');
+    await page.type('#password', 'Azerty@@00');
+    // LEv.q8XeGxP2Pid
     await Promise.all([
         page.waitForNavigation(), // Wait for the navigation to complete after clicking the login button.
         page.click('button[type="submit"]'),
