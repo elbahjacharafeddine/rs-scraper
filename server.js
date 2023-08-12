@@ -39,7 +39,7 @@ let browser;
 // Function to launch the Puppeteer browser if not already launched.
 async function getBrowser() {
     browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -100,19 +100,25 @@ wss.on('connection', async (ws) => {
                 }catch (e) {
                     console.log('university not found ...')
                 }
+
                 let h_index = ''
+                console.log("start time out")
+
+                await page.waitForTimeout(1000)
                 try {
-                    h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span.Typography-module__lVnit.Typography-module__ix7bs.Typography-module__Nfgvc", (e) => e.textContent)
+                    h_index = await page.$eval("#scopus-author-profile-page-control-microui__general-information-content > div.Col-module__hwM1N.offset-lg-2 > section > div > div:nth-child(3) > div > div > div:nth-child(1) > span", (e) => e.textContent)
                 } catch (error) {
-                    console.log("")
+                    console.log(error)
                 }
+                // page.waitForTimeout(9000)
+                console.log("fin time out")
                 const interests = []
 
                 console.log('start scrolling...')
                 await autoScroll(page);
                 console.log('End of scrolling...')
 
-                let publicationss = []
+
                 let publications =[]
                 const allPath = await page.evaluate(() => Array.from(document.querySelectorAll('path[aria-label]'), (e) => e.getAttribute('aria-label')));
                 const citationsPerYear = allPath.map(item => {
